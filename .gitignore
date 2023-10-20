@@ -1,0 +1,5 @@
+# Project exclude paths
+/index.js
+/index.js.map
+.idea
+node_modules
