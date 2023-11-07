@@ -1,4 +1,5 @@
 import axios, {AxiosRequestConfig, AxiosResponse} from "axios";
+import * as fs from "fs";
 
 type ChatMessage = {
     "id": string;
@@ -61,10 +62,12 @@ type Chat = {
 type ChatList = {
     "@odata.context": string;
     "@odata.count": number;
+    "@odata.nextLink": string;
+    "@microsoft.graph.tips": string;
     "value": Chat []
 }
 
-const token = ''
+const token = '';
 
 async function main() {
 
@@ -74,32 +77,52 @@ async function main() {
             'Host': 'graph.microsoft.com'
         }
     };
-    const chatListUrl: string = 'https://graph.microsoft.com/v1.0/chats';
-    const chatIdsResponse = await axios.get<ChatList>(chatListUrl, options)
-    const chats: ChatList = chatIdsResponse.data
-    console.log('NB chats', chats.value.length)
+    let nextChatListLink: string = 'https://graph.microsoft.com/v1.0/chats?$top=1'
+    while (nextChatListLink) {
+        try {
+            const chatIdsResponse = await axios.get<ChatList>(nextChatListLink, options)
+            nextChatListLink = chatIdsResponse.data["@odata.nextLink"]
+            const chats: ChatList = chatIdsResponse.data
+            console.log('NB chats', chats.value.length)
 
-    for (const chat of chats.value) {
-        const chatMessagesUrl: string = `https://graph.microsoft.com/v1.0/chats/${chat.id}/messages?$top=50&$orderby=createdDateTime desc`;
-        // let messages: string[] = [];
-        let messageNb = 0;
-        let lastDate = ''
-        const users = new Set<string>()
-        let nextLink: string | null = chatMessagesUrl
-        while (nextLink) {
+            for (const chat of chats.value) {
+                const chatMessagesUrl: string = `https://graph.microsoft.com/v1.0/chats/${chat.id}/messages?$top=50&$orderby=createdDateTime desc`;
+                let messages: string[] = [];
+                const users = new Set<string>()
+                let nextLink: string = chatMessagesUrl
+                while (nextLink) {
 
-            const chatMessagesResponse: AxiosResponse<ChatMessageData> = await axios.get<ChatMessageData>(nextLink, options)
-            const chatMessages = chatMessagesResponse.data
-            nextLink = chatMessages["@odata.nextLink"];
-            messageNb += chatMessages.value.length
-            lastDate = chatMessages.value[chatMessages.value.length - 1].createdDateTime
-            users.add(chatMessages.value[chatMessages.value.length - 1].from?.user?.displayName)
-            // messages = [
-            //     ...messages,
-            //     ...chatMessages.value.map(message => message.createdDateTime)
-            // ]
+                    const chatMessagesResponse: AxiosResponse<ChatMessageData> = await axios.get<ChatMessageData>(nextLink, options)
+                    const chatMessages = chatMessagesResponse.data
+                    nextLink = chatMessages["@odata.nextLink"];
+                    const currentMessages = chatMessages.value.filter(message => message.body.content && message.body.content !== '<systemEventMessage/>')
+
+                    currentMessages.map((message => message.from?.user?.displayName)).forEach(user => users.add(user));
+                    messages = [
+                        ...messages,
+                        ...currentMessages.map(message =>
+                            `${message.from?.user?.displayName}::${message.createdDateTime}::${message.body.content.replace(/(\r\n|\n|\r)/gm, "")}`
+                        ),
+                    ]
+                }
+                const messageNb = messages.length
+                if (messageNb > 0) {
+
+                    const fileName = `${chat.topic || [...users].join(',')}-${messageNb}`
+                        .split('"').join('-')
+                        .split('?').join('-')
+                        .split('/').join('-')
+                        .split('\\').join('-')
+                        .split(':').join('-')
+                        .split(',').join('-')
+                        .split(' ').join('-')
+                    fs.writeFileSync(`./output/${fileName}.txt`, messages.join('\r'));
+                    console.log(`${chat.topic || [...users].join(',')} || ${messageNb}`)
+                }
+            }
+        } catch (e) {
+
         }
-        console.log(chat.topic, `|${[...users].join('|')}|`, lastDate, messageNb)
     }
 
 }
