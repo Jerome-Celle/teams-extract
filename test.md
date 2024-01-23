@@ -1,7 +1,15 @@
 ## Markdown __rulez__!
 ---
 
+::: video
+<iframe width="560" height="315" src="https://www.youtube.com/embed/OtqFyBA6Dbk" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+:::
+
+::: video
 <iframe src="https://eviden-my.sharepoint.com/personal/pierre_lemoine_eviden_com/_layouts/15/embed.aspx?UniqueId=47c360c6-809a-5168-8a45-dc99fe48ecca&amp;embed=%7B%22ust%22%3Atrue%2C%22hv%22%3A%22CopyEmbedCode%22%7D&amp;referrer=StreamWebApp&amp;referrerScenario=EmbedDialog.Create" width="640" height="360" frameborder="0" scrolling="no" allowfullscreen="" title="[Learning with the experts] Introduction to GPU-20230125_013519.mp4" data-dashlane-frameid="3316"></iframe>
+:::
+
+[![](https://markdown-videos-api.jorgenkh.no/youtube/dQw4w9WgXcQ)](https://youtu.be/dQw4w9WgXcQ)
 
 
 <table>
