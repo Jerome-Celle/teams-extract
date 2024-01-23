@@ -5,6 +5,10 @@
 ```typescript
 const language = 'typescript';
 ```
+Reference-style:
+![alt text][logo]
+
+[logo]: Capture.PNG "Logo Title Text 2"
 
 ### Lists
 1. Ordered list
